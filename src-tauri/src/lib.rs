@@ -237,6 +237,15 @@ fn generate_output_path(
 // ============================================================================
 
 fn load_image(path: &Path) -> Result<DynamicImage, ConversionError> {
+    // Check for AVIF files - decoding not supported on all platforms
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        if ext.to_lowercase() == "avif" {
+            return Err(ConversionError::UnsupportedFormat(
+                "AVIF decoding is not supported. You can convert TO AVIF format, but not FROM AVIF.".to_string()
+            ));
+        }
+    }
+
     let reader = ImageReader::open(path)
         .map_err(|e| ConversionError::ReadError(e.to_string()))?
         .with_guessed_format()
@@ -846,22 +855,50 @@ fn convert_with_pandoc(
 // ============================================================================
 
 fn find_ffmpeg() -> Option<PathBuf> {
-    let locations = if cfg!(target_os = "windows") {
+    let mut locations: Vec<String> = if cfg!(target_os = "windows") {
         vec![
-            "ffmpeg.exe",
-            "ffmpeg",
-            "C:\\ffmpeg\\bin\\ffmpeg.exe",
-            "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe",
-            "C:\\Program Files (x86)\\ffmpeg\\bin\\ffmpeg.exe",
+            "ffmpeg.exe".to_string(),
+            "ffmpeg".to_string(),
+            "C:\\ffmpeg\\bin\\ffmpeg.exe".to_string(),
+            "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe".to_string(),
+            "C:\\Program Files (x86)\\ffmpeg\\bin\\ffmpeg.exe".to_string(),
         ]
     } else {
         vec![
-            "ffmpeg",
-            "/usr/bin/ffmpeg",
-            "/usr/local/bin/ffmpeg",
-            "/opt/homebrew/bin/ffmpeg",
+            "ffmpeg".to_string(),
+            "/usr/bin/ffmpeg".to_string(),
+            "/usr/local/bin/ffmpeg".to_string(),
+            "/opt/homebrew/bin/ffmpeg".to_string(),
         ]
     };
+
+    // On Windows, also check WinGet and common user installation paths
+    if cfg!(target_os = "windows") {
+        if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
+            // Check WinGet packages directory
+            let winget_base = format!("{}\\Microsoft\\WinGet\\Packages", local_app_data);
+            if let Ok(entries) = std::fs::read_dir(&winget_base) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let name = path.file_name().unwrap_or_default().to_string_lossy();
+                        if name.contains("FFmpeg") {
+                            // Search for ffmpeg.exe in bin subdirectory
+                            let bin_path = path.join("ffmpeg-8.0.1-full_build").join("bin").join("ffmpeg.exe");
+                            if bin_path.exists() {
+                                locations.insert(0, bin_path.to_string_lossy().to_string());
+                            }
+                            // Also try direct bin path
+                            let direct_bin = path.join("bin").join("ffmpeg.exe");
+                            if direct_bin.exists() {
+                                locations.insert(0, direct_bin.to_string_lossy().to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     for loc in &locations {
         if StdCommand::new(loc).arg("-version").output().is_ok() {
