@@ -1,0 +1,403 @@
+@import "tailwindcss";
+
+/* Local Font Definitions - Fully Offline */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/SpaceGrotesk-Variable.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  /* Neo-Brutalist Retro Color Palette */
+  --color-cream: #FFFEF5;
+  --color-cream-dark: #F5F4E8;
+  --color-yellow: #FFE156;
+  --color-yellow-dark: #E6C84D;
+  --color-cyan: #4ECDC4;
+  --color-cyan-dark: #3DB8B0;
+  --color-coral: #FF6B6B;
+  --color-coral-dark: #E55A5A;
+  --color-navy: #1A1A2E;
+  --color-navy-light: #2D2D44;
+  --color-purple: #9B5DE5;
+  --color-purple-dark: #8A4DD4;
+  --color-green: #00F5A0;
+  --color-green-dark: #00D68F;
+  --color-orange: #FF9F43;
+  --color-orange-dark: #E68F3C;
+
+  /* Additional colors for media types */
+  --color-blue: #3B82F6;
+  --color-blue-dark: #2563EB;
+  --color-pink: #EC4899;
+  --color-pink-dark: #DB2777;
+  --color-indigo: #6366F1;
+  --color-indigo-dark: #4F46E5;
+
+  /* Semantic Colors */
+  --color-background: #FFFEF5;
+  --color-surface: #FFFFFF;
+  --color-primary: #FFE156;
+  --color-secondary: #4ECDC4;
+  --color-accent: #FF6B6B;
+  --color-text: #1A1A2E;
+  --color-text-muted: #5A5A7A;
+  --color-border: #1A1A2E;
+  --color-success: #00F5A0;
+  --color-error: #FF5A5A;
+  --color-warning: #FF9F43;
+
+  /* Shadows */
+  --shadow-brutal: 4px 4px 0px #1A1A2E;
+  --shadow-brutal-sm: 2px 2px 0px #1A1A2E;
+  --shadow-brutal-lg: 6px 6px 0px #1A1A2E;
+  --shadow-brutal-hover: 6px 6px 0px #1A1A2E;
+  --shadow-brutal-active: 2px 2px 0px #1A1A2E;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-cream-dark);
+  border-left: 2px solid var(--color-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy);
+  border: 2px solid var(--color-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-navy-light);
+}
+
+/* Utility Classes for Neo-Brutalist Design */
+.brutal-border {
+  border: 3px solid var(--color-border);
+}
+
+.brutal-border-2 {
+  border: 2px solid var(--color-border);
+}
+
+.brutal-shadow {
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-shadow-sm {
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+.brutal-shadow-lg {
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+/* Button Styles */
+.btn-brutal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 3px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: var(--shadow-brutal);
+}
+
+.btn-brutal:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-hover);
+}
+
+.btn-brutal:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-brutal-active);
+}
+
+.btn-brutal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-yellow);
+  color: var(--color-text);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-yellow-dark);
+}
+
+.btn-secondary {
+  background-color: var(--color-cyan);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-cyan-dark);
+}
+
+.btn-danger {
+  background-color: var(--color-coral);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--color-coral-dark);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  box-shadow: none;
+  border: 2px solid var(--color-border);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--color-cream-dark);
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Card Styles */
+.card-brutal {
+  background-color: var(--color-surface);
+  border: 3px solid var(--color-border);
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Input Styles */
+.input-brutal {
+  padding: 0.75rem 1rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-brutal-sm);
+  transition: all 0.1s ease;
+}
+
+.input-brutal:focus {
+  outline: none;
+  box-shadow: var(--shadow-brutal);
+  transform: translate(-1px, -1px);
+}
+
+/* Select Styles */
+.select-brutal {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.875rem;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-brutal-sm);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231A1A2E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.25rem;
+}
+
+.select-brutal:focus {
+  outline: none;
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Badge/Tag Styles */
+.tag-brutal {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Progress Bar */
+.progress-brutal {
+  height: 1.5rem;
+  background-color: var(--color-cream-dark);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-brutal-sm);
+  overflow: hidden;
+}
+
+.progress-brutal-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-cyan),
+    var(--color-cyan) 10px,
+    var(--color-cyan-dark) 10px,
+    var(--color-cyan-dark) 20px
+  );
+  transition: width 0.3s ease;
+}
+
+/* Animations */
+@keyframes bounce-brutal {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-brutal {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes spin-brutal {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-bounce-brutal {
+  animation: bounce-brutal 0.5s ease-in-out infinite;
+}
+
+.animate-pulse-brutal {
+  animation: pulse-brutal 1.5s ease-in-out infinite;
+}
+
+.animate-spin-brutal {
+  animation: spin-brutal 1s linear infinite;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out forwards;
+}
+
+/* File type colors */
+.file-type-image { background-color: var(--color-purple); color: white; }
+.file-type-document { background-color: var(--color-coral); color: white; }
+.file-type-audio { background-color: var(--color-cyan); color: var(--color-text); }
+.file-type-video { background-color: var(--color-orange); color: var(--color-text); }
+.file-type-default { background-color: var(--color-navy); color: white; }
+
+/* Status colors */
+.status-pending { background-color: var(--color-cream-dark); color: var(--color-text); }
+.status-converting { background-color: var(--color-cyan); color: var(--color-text); }
+.status-complete { background-color: var(--color-green); color: var(--color-text); }
+.status-error { background-color: var(--color-coral); color: white; }
+
+/* Tooltip */
+.tooltip-brutal {
+  position: relative;
+}
+
+.tooltip-brutal::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background-color: var(--color-navy);
+  color: white;
+  border: 2px solid var(--color-border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.tooltip-brutal:hover::after {
+  opacity: 1;
+}
+
+/* Drag and Drop states */
+.drop-active {
+  background-color: var(--color-yellow) !important;
+  border-style: solid !important;
+}
+
+/* Retro pattern backgrounds */
+.pattern-dots {
+  background-image: radial-gradient(var(--color-navy) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.pattern-grid {
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-diagonal {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    var(--color-cream-dark) 10px,
+    var(--color-cream-dark) 20px
+  );
+}

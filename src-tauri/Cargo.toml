@@ -1,0 +1,72 @@
+[package]
+name = "fileflip"
+version = "1.0.0"
+description = "Offline file converter - Convert images, documents, audio and video privately"
+authors = ["FileFlip"]
+edition = "2021"
+default-run = "fileflip"
+
+[lib]
+name = "fileflip_lib"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "fileflip"
+path = "src/main.rs"
+
+[[bin]]
+name = "test_conversions"
+path = "src/bin/test_conversions.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Image processing - extended format support
+image = { version = "0.25", features = [
+    "jpeg", "png", "gif", "bmp", "webp", "tiff", "ico", "avif"
+] }
+
+# SVG rendering
+resvg = "0.44"
+usvg = "0.44"
+
+# PDF generation and rendering
+printpdf = "0.7"
+pdf = "0.9"
+lopdf = "0.34"
+
+# Document processing
+pulldown-cmark = "0.12"  # Markdown parsing
+comrak = "0.31"  # GitHub-flavored markdown
+html2text = "0.14"  # HTML to text
+
+# Async runtime for FFmpeg process management
+tokio = { version = "1", features = ["process", "fs", "rt-multi-thread", "io-util"] }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Base64 encoding for embedded resources
+base64 = "0.22"
+
+# Text encoding detection
+encoding_rs = "0.8"
+
+# Regex for document processing
+regex = "1"
+
+[features]
+default = []
+
+[profile.release]
+lto = true
+opt-level = "s"
+strip = true
