@@ -155,25 +155,54 @@ export function DropZone({ onFilesAdded, disabled }: DropZoneProps) {
         </p>
       </div>
 
-      {/* Supported formats tags - organized by category */}
-      <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-md">
-        {/* Images */}
-        <span className="tag-brutal bg-purple text-white text-[10px]">PNG</span>
-        <span className="tag-brutal bg-purple text-white text-[10px]">JPG</span>
-        <span className="tag-brutal bg-purple text-white text-[10px]">WEBP</span>
-        <span className="tag-brutal bg-purple text-white text-[10px]">SVG</span>
-        <span className="tag-brutal bg-purple text-white text-[10px]">AVIF</span>
-        {/* Documents */}
-        <span className="tag-brutal bg-coral text-white text-[10px]">PDF</span>
-        {/* Audio */}
-        <span className="tag-brutal bg-cyan text-navy text-[10px]">MP3</span>
-        <span className="tag-brutal bg-cyan text-navy text-[10px]">WAV</span>
-        <span className="tag-brutal bg-cyan text-navy text-[10px]">FLAC</span>
-        {/* Video */}
-        <span className="tag-brutal bg-orange text-navy text-[10px]">MP4</span>
-        <span className="tag-brutal bg-orange text-navy text-[10px]">WEBM</span>
-        <span className="tag-brutal bg-orange text-navy text-[10px]">MKV</span>
+      {/* Supported formats - Category badges with counts */}
+      <div className="flex flex-wrap justify-center gap-3 mt-2">
+        <div className="group relative">
+          <span className="tag-brutal bg-purple text-white text-xs font-bold px-3 py-1 cursor-default">
+            IMAGES (15+)
+          </span>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+            <div className="bg-navy text-white text-[10px] p-2 brutal-border-2 whitespace-nowrap">
+              PNG, JPG, WEBP, SVG, AVIF, BMP, GIF, TIFF, ICO, HEIC, HEIF, PPM, PGM, PBM, RAW
+            </div>
+          </div>
+        </div>
+        <div className="group relative">
+          <span className="tag-brutal bg-coral text-white text-xs font-bold px-3 py-1 cursor-default">
+            DOCUMENTS (10+)
+          </span>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+            <div className="bg-navy text-white text-[10px] p-2 brutal-border-2 whitespace-nowrap">
+              PDF, TXT, MD, HTML, RTF, DOCX, DOC, ODT, EPUB, TEX
+            </div>
+          </div>
+        </div>
+        <div className="group relative">
+          <span className="tag-brutal bg-cyan text-navy text-xs font-bold px-3 py-1 cursor-default">
+            AUDIO (11)
+          </span>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+            <div className="bg-navy text-white text-[10px] p-2 brutal-border-2 whitespace-nowrap">
+              MP3, WAV, FLAC, OGG, AAC, M4A, OPUS, WMA, AIFF, APE, AC3
+            </div>
+          </div>
+        </div>
+        <div className="group relative">
+          <span className="tag-brutal bg-orange text-navy text-xs font-bold px-3 py-1 cursor-default">
+            VIDEO (13)
+          </span>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+            <div className="bg-navy text-white text-[10px] p-2 brutal-border-2 whitespace-nowrap">
+              MP4, WEBM, MKV, AVI, MOV, FLV, WMV, 3GP, MTS, TS, VOB, OGV, MPG
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Total formats brag */}
+      <p className="text-xs font-bold text-navy mt-2">
+        70+ FORMATS SUPPORTED
+      </p>
 
       {/* Corner decorations */}
       <div className="absolute top-3 left-3 w-4 h-4 border-t-3 border-l-3 border-navy" />

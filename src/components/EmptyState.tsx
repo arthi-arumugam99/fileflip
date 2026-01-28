@@ -36,7 +36,7 @@ export function EmptyState() {
               <polyline points="21 15 16 10 5 21" />
             </svg>
           </div>
-          <span className="text-xs font-mono text-navy">HEIC, PNG, JPG</span>
+          <span className="text-xs font-bold text-navy">15+ IMAGE FORMATS</span>
         </div>
         <div className="flex items-center gap-2 p-2 bg-cream-dark brutal-border-2">
           <div className="w-8 h-8 bg-coral brutal-border-2 flex items-center justify-center">
@@ -45,9 +45,38 @@ export function EmptyState() {
               <polyline points="14 2 14 8 20 8" />
             </svg>
           </div>
-          <span className="text-xs font-mono text-navy">PDF, WEBP, GIF</span>
+          <span className="text-xs font-bold text-navy">10+ DOC FORMATS</span>
+        </div>
+        <div className="flex items-center gap-2 p-2 bg-cream-dark brutal-border-2">
+          <div className="w-8 h-8 bg-cyan brutal-border-2 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2">
+              <path d="M9 18V5l12-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="18" cy="16" r="3" />
+            </svg>
+          </div>
+          <span className="text-xs font-bold text-navy">11 AUDIO FORMATS</span>
+        </div>
+        <div className="flex items-center gap-2 p-2 bg-cream-dark brutal-border-2">
+          <div className="w-8 h-8 bg-orange brutal-border-2 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+              <path d="M7 2v20" />
+              <path d="M17 2v20" />
+              <path d="M2 12h20" />
+              <path d="M2 7h5" />
+              <path d="M2 17h5" />
+              <path d="M17 17h5" />
+              <path d="M17 7h5" />
+            </svg>
+          </div>
+          <span className="text-xs font-bold text-navy">13 VIDEO FORMATS</span>
         </div>
       </div>
+
+      <p className="text-sm font-bold text-purple mt-4">
+        70+ TOTAL FORMATS
+      </p>
 
       <div className="mt-6 p-3 bg-yellow/20 brutal-border-2 border-yellow">
         <p className="text-xs font-bold text-navy flex items-center justify-center gap-2">

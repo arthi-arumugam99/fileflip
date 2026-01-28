@@ -937,7 +937,8 @@ fn convert_with_ffmpeg(
         }
         "ogg" => {
             let br = bitrate.unwrap_or("192k");
-            cmd.arg("-c:a").arg("libvorbis").arg("-b:a").arg(br);
+            cmd.arg("-ar").arg("44100") // Resample to 44.1kHz (libvorbis requirement)
+               .arg("-c:a").arg("libvorbis").arg("-b:a").arg(br);
         }
         "aac" | "m4a" => {
             let br = bitrate.unwrap_or("192k");
