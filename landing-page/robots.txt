@@ -1,0 +1,11 @@
+# FileFlip Robots.txt
+# https://fileflip.app
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://fileflip.app/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
