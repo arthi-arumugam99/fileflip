@@ -1,0 +1,150 @@
+name: Build macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install Rust targets for universal binary
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Apple certificate
+        if: ${{ env.APPLE_CERTIFICATE != '' }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Import certificate from secrets
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o $CERTIFICATE_PATH
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Allow codesign to access keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+      - name: Build Tauri app (Universal Binary)
+        run: npm run tauri build -- --target universal-apple-darwin
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Create .pkg installer
+        if: ${{ env.APPLE_SIGNING_IDENTITY != '' }}
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          APP_PATH=$(find src-tauri/target/universal-apple-darwin/release/bundle -name "*.app" -type d | head -1)
+          APP_NAME=$(basename "$APP_PATH" .app)
+
+          productbuild \
+            --component "$APP_PATH" /Applications \
+            --sign "$APPLE_SIGNING_IDENTITY" \
+            "${APP_NAME}.pkg"
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileFlip-macOS-app
+          path: src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
+          if-no-files-found: error
+
+      - name: Upload .dmg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileFlip-macOS-dmg
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
+
+      - name: Upload .pkg artifact
+        if: ${{ hashFiles('*.pkg') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileFlip-macOS-pkg
+          path: "*.pkg"
+
+      - name: Cleanup keychain
+        if: ${{ always() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/app-signing.keychain-db" ]; then
+            security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+          fi
+
+  # Optional: Upload to App Store Connect
+  upload-to-app-store:
+    needs: build-macos
+    runs-on: macos-latest
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && secrets.APPLE_API_KEY != '' }}
+
+    steps:
+      - name: Download .pkg artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FileFlip-macOS-pkg
+
+      - name: Upload to App Store Connect
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          # Create API key file
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$APPLE_API_KEY" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
+
+          # Upload using xcrun
+          xcrun altool --upload-app \
+            --type osx \
+            --file *.pkg \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_ISSUER"
