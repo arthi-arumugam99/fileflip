@@ -1,8 +1,9 @@
 # FileFlip Robots.txt
-# https://fileflip.app
+# https://fileflip.space
 
 User-agent: *
 Allow: /
+Disallow: /ms-pkg/
 
 # Sitemap location
 Sitemap: https://fileflip.app/sitemap.xml
