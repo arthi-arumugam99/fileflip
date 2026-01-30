@@ -51,6 +51,9 @@ jobs:
           # Verify
           security find-identity -v -p codesigning build.keychain
 
+      - name: Clean previous build cache
+        run: cd src-tauri && cargo clean
+
       - name: Build Tauri App (Universal Binary)
         run: npm run tauri build -- --target universal-apple-darwin
         env:
