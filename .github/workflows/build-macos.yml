@@ -21,7 +21,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install Rust targets
         run: |
@@ -93,7 +93,6 @@ jobs:
           fi
 
       - name: Upload to App Store Connect
-        if: ${{ secrets.APPLE_API_KEY != '' }}
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
