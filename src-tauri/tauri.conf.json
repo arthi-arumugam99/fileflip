@@ -43,7 +43,7 @@
     "shortDescription": "Fast, private offline file converter",
     "longDescription": "FileFlip is a powerful offline file converter that transforms your images and documents without ever sending them to the cloud. Convert HEIC, PNG, JPG, WebP, GIF, BMP, TIFF, and more with just a few clicks. Your files never leave your computer.",
     "copyright": "Copyright 2024 FileFlip",
-    "publisher": "FileFlip",
+    "publisher": "junoapps",
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
