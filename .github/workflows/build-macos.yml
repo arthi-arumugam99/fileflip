@@ -43,65 +43,100 @@ jobs:
           security create-keychain -p "temp123" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "temp123" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
 
           # Import certificate
-          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temp123" build.keychain
 
           # Verify
+          echo "Available signing identities:"
           security find-identity -v -p codesigning build.keychain
-
-      - name: Clean previous build cache
-        run: cd src-tauri && cargo clean
 
       - name: Build Tauri App (Universal Binary)
         run: npm run tauri build -- --target universal-apple-darwin
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Sign the App
-        timeout-minutes: 10
-        continue-on-error: true
+      - name: Sign the App for App Store
+        run: |
+          APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
+          ENTITLEMENTS="src-tauri/entitlements.plist"
+
+          # Use the exact certificate name
+          IDENTITY="Apple Distribution: Arthi Arumugam (MYK2DQMWRG)"
+
+          echo "Signing app with: $IDENTITY"
+
+          # Sign all nested components first
+          find "$APP_PATH/Contents" -type f \( -name "*.dylib" -o -name "*.so" -o -perm +111 \) -exec \
+            codesign --force --verbose --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" --options runtime {} \; 2>/dev/null || true
+
+          # Sign the main executable
+          codesign --force --verbose \
+            --sign "$IDENTITY" \
+            --entitlements "$ENTITLEMENTS" \
+            --options runtime \
+            "$APP_PATH/Contents/MacOS/FileFlip"
+
+          # Sign the app bundle
+          codesign --force --verbose \
+            --sign "$IDENTITY" \
+            --entitlements "$ENTITLEMENTS" \
+            --options runtime \
+            "$APP_PATH"
+
+          # Verify signature
+          echo "Verifying signature..."
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+      - name: Create .pkg for App Store
         run: |
           APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
 
-          # List all identities to see what we have
-          echo "Available signing identities:"
-          security find-identity -v -p codesigning build.keychain
-
-          # Find any signing identity (not just "Apple Distribution")
-          IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep -E "^\s+\d\)" | head -1 | awk -F'"' '{print $2}')
-
-          if [ -n "$IDENTITY" ]; then
-            echo "Signing with: $IDENTITY"
-            codesign --deep --force --verbose \
-              --sign "$IDENTITY" \
-              --options runtime \
-              "$APP_PATH" || echo "Signing failed, continuing without signature"
-          else
-            echo "No signing identity found, skipping signing"
-          fi
-
-      - name: Create .pkg Installer (unsigned)
-        run: |
-          APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
-          echo "Creating unsigned pkg for testing"
+          # Create unsigned pkg (installer signing requires separate certificate)
           productbuild --component "$APP_PATH" /Applications FileFlip.pkg
+
+          echo "Package created: FileFlip.pkg"
+          ls -la FileFlip.pkg
+
+      - name: Upload to App Store Connect
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          # Create API key directory
+          mkdir -p ~/.private_keys
+          echo "$APPLE_API_KEY" | base64 --decode > ~/.private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
+
+          echo "Uploading to App Store Connect..."
+
+          # Upload using xcrun altool
+          xcrun altool --upload-app \
+            --type macos \
+            --file FileFlip.pkg \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_ISSUER" \
+            --verbose
 
       - name: Upload .app Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: FileFlip-macOS-app
           path: src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
 
       - name: Upload .pkg Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: FileFlip-macOS-pkg
           path: FileFlip.pkg
 
       - name: Upload .dmg Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: FileFlip-macOS-dmg
           path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
