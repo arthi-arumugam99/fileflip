@@ -31,13 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Import Apple Certificate
+      - name: Import Apple Certificates
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          # Create certificate file
+          # Create certificate files
           echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          echo "$APPLE_INSTALLER_CERTIFICATE" | base64 --decode > installer_certificate.p12
 
           # Create temporary keychain
           security create-keychain -p "temp123" build.keychain
@@ -45,13 +47,42 @@ jobs:
           security unlock-keychain -p "temp123" build.keychain
           security set-keychain-settings -lut 21600 build.keychain
 
-          # Import certificate
+          # Import distribution certificate
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+
+          # Import installer certificate
+          security import installer_certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temp123" build.keychain
 
           # Verify
           echo "Available signing identities:"
-          security find-identity -v -p codesigning build.keychain
+          security find-identity -v build.keychain
+
+      - name: Generate App Icon with 1024x1024
+        run: |
+          # Create iconset directory
+          mkdir -p src-tauri/icons/AppIcon.iconset
+
+          # Use sips to create all required sizes from icon_1024.png
+          SOURCE="src-tauri/icons/icon_1024.png"
+          ICONSET="src-tauri/icons/AppIcon.iconset"
+
+          sips -z 16 16     "$SOURCE" --out "${ICONSET}/icon_16x16.png"
+          sips -z 32 32     "$SOURCE" --out "${ICONSET}/icon_16x16@2x.png"
+          sips -z 32 32     "$SOURCE" --out "${ICONSET}/icon_32x32.png"
+          sips -z 64 64     "$SOURCE" --out "${ICONSET}/icon_32x32@2x.png"
+          sips -z 128 128   "$SOURCE" --out "${ICONSET}/icon_128x128.png"
+          sips -z 256 256   "$SOURCE" --out "${ICONSET}/icon_128x128@2x.png"
+          sips -z 256 256   "$SOURCE" --out "${ICONSET}/icon_256x256.png"
+          sips -z 512 512   "$SOURCE" --out "${ICONSET}/icon_256x256@2x.png"
+          sips -z 512 512   "$SOURCE" --out "${ICONSET}/icon_512x512.png"
+          cp "$SOURCE"      "${ICONSET}/icon_512x512@2x.png"
+
+          # Generate icns
+          iconutil -c icns "${ICONSET}" -o src-tauri/icons/icon.icns
+
+          echo "Generated icon.icns with all sizes including 1024x1024"
 
       - name: Build Tauri App (Universal Binary)
         run: npm run tauri build -- --target universal-apple-darwin
@@ -90,15 +121,21 @@ jobs:
           echo "Verifying signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
-      - name: Create .pkg for App Store
+      - name: Create Signed .pkg for App Store
         run: |
           APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
+          INSTALLER_IDENTITY="3rd Party Mac Developer Installer: Arthi Arumugam (MYK2DQMWRG)"
 
-          # Create unsigned pkg (installer signing requires separate certificate)
-          productbuild --component "$APP_PATH" /Applications FileFlip.pkg
+          echo "Creating signed pkg with: $INSTALLER_IDENTITY"
 
-          echo "Package created: FileFlip.pkg"
+          # Create signed pkg
+          productbuild --component "$APP_PATH" /Applications --sign "$INSTALLER_IDENTITY" FileFlip.pkg
+
+          echo "Package created and signed: FileFlip.pkg"
           ls -la FileFlip.pkg
+
+          # Verify pkg signature
+          pkgutil --check-signature FileFlip.pkg
 
       - name: Upload to App Store Connect
         env:
