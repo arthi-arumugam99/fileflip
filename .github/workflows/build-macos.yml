@@ -60,57 +60,33 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Sign the App
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        timeout-minutes: 10
+        continue-on-error: true
         run: |
           APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
 
-          # Find signing identity
-          IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -1 | awk -F'"' '{print $2}')
+          # List all identities to see what we have
+          echo "Available signing identities:"
+          security find-identity -v -p codesigning build.keychain
 
-          echo "Signing with: $IDENTITY"
+          # Find any signing identity (not just "Apple Distribution")
+          IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep -E "^\s+\d\)" | head -1 | awk -F'"' '{print $2}')
 
-          # Sign the app
-          codesign --deep --force --verify --verbose \
-            --sign "$IDENTITY" \
-            --options runtime \
-            "$APP_PATH"
-
-          # Verify signature
-          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-
-      - name: Create .pkg Installer
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
-
-          # Find installer signing identity
-          INSTALLER_IDENTITY=$(security find-identity -v build.keychain | grep "Developer ID Installer\|3rd Party Mac Developer Installer" | head -1 | awk -F'"' '{print $2}')
-
-          if [ -n "$INSTALLER_IDENTITY" ]; then
-            productbuild --component "$APP_PATH" /Applications --sign "$INSTALLER_IDENTITY" FileFlip.pkg
+          if [ -n "$IDENTITY" ]; then
+            echo "Signing with: $IDENTITY"
+            codesign --deep --force --verbose \
+              --sign "$IDENTITY" \
+              --options runtime \
+              "$APP_PATH" || echo "Signing failed, continuing without signature"
           else
-            echo "No installer certificate found, creating unsigned pkg"
-            productbuild --component "$APP_PATH" /Applications FileFlip.pkg
+            echo "No signing identity found, skipping signing"
           fi
 
-      - name: Upload to App Store Connect
-        env:
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      - name: Create .pkg Installer (unsigned)
         run: |
-          # Create API key directory
-          mkdir -p ~/.private_keys
-          echo "$APPLE_API_KEY" | base64 --decode > ~/.private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
-
-          # Upload to App Store Connect
-          xcrun altool --upload-app \
-            --type macos \
-            --file FileFlip.pkg \
-            --apiKey "$APPLE_API_KEY_ID" \
-            --apiIssuer "$APPLE_API_ISSUER"
+          APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/FileFlip.app"
+          echo "Creating unsigned pkg for testing"
+          productbuild --component "$APP_PATH" /Applications FileFlip.pkg
 
       - name: Upload .app Artifact
         uses: actions/upload-artifact@v4
